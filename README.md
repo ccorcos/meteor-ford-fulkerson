@@ -40,4 +40,10 @@ You should just looks at the source code.
 
 ## To Do
 
-Is it possible to update a single edge capacity without having to recompute the whole graph?
+- [Add or remove node without recomputing the whole thing](http://cstheory.stackexchange.com/questions/9938/incremental-maximum-flow-in-dynamic-graphs).
+- Change edge capacity without recomputing the whole thing.
+  - add capacity, recompute
+  - remove capacity
+    - if still more than flow, then nothing
+    - if less that flow, then reduce forward all flow by 1.
+- Use a collection for the graph, personalized to each user? This is going to get huge.
