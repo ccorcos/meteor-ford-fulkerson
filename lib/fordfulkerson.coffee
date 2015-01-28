@@ -13,14 +13,16 @@ FordFulkerson = ->
     unless Edges[sink]
       Edges[sink] = {}
 
+    # the capcity the "residual" capacity: how much more that edge can flow
+    # the flow is how much that edge is already flowing.
+    # increases flow and decreases the capacity of the edge but
+    # decreases flow and increases the capacity of the reverse edge
     if directed
-      # residual = capacity - flow
-      Edges[source][sink] = {capacity, flow:0}
-      Edges[sink][source] = {capacity:0, flow:0}
+      Edges[source][sink] = {source, sink, capacity, flow:0}
+      Edges[sink][source] = {sink:source, source:sink, capacity:0, flow:0}
     else
-      # the residual capacity is the same for undirected
-      Edges[source][sink] = {capacity, flow:0}
-      Edges[sink][source] = {capacity, flow:0}
+      Edges[source][sink] = {source, sink, capacity, flow:0}
+      Edges[sink][source] = {sink:source, source:sink, capacity, flow:0}
 
   findPath = (source, sink, path=[]) ->
     # recursively find path
@@ -32,32 +34,37 @@ FordFulkerson = ->
     edges = _.difference edges, path
 
     for edge in edges
-      potentialFlow = edge.capacity - edge.flow
-      if potentialFlow > 0
-        potentialPath = _.clone(path).push(edge)
+      if edge.capacity > 0
+        potentialPath = _.clone(path)
+        potentialPath.push(edge)
         maybePath = findPath(edge.sink, sink, potentialPath)
-        if maybePath return maybePath
+        if maybePath then return maybePath
 
+    # no more path for flow
     return null
 
   computeFlow = (source, sink) ->
     path = findPath(source, sink)
     if path
-      bottleneckFlow = _(path).values('capacity').min()
+      # console.log "PATH", path
+      bottleneckFlow = _.pluck(path, 'capacity').min()
+      # console.log "BOTTLENECK", bottleneckFlow
       
       updateFlow = (edge) ->
+        reverse = reverseEdge(edge)
+        # console.log "FORWARD: #{edge.flow}/#{edge.capacity} -> #{edge.flow+bottleneckFlow}/#{edge.capacity-bottleneckFlow}"
+        # console.log "REVERSE: #{reverse.flow}/#{reverse.capacity} -> #{reverse.flow-bottleneckFlow}/#{reverse.capacity+bottleneckFlow}"
         # forward gets flow, but less capacity
         edge.flow += bottleneckFlow
         edge.capacity -= bottleneckFlow
         # reverse gets less flow but more capacity
-        reverse = reverseEdge(edge)
         reverse.capacity += bottleneckFlow
         reverse.flow -= bottleneckFlow
 
       path.map updateFlow
-      return flowStep(source, sink)
+      return computeFlow(source, sink)
     
-    maxFlow = _.values(Edges[source], 'flow').sum()
+    maxFlow = _.pluck(Edges[source], 'flow').sum()
     minCut = maxFlow
     return {Edges, maxFlow, minCut}
 

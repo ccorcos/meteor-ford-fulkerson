@@ -21,8 +21,3 @@ Package.onUse(function(api) {
   api.export('FordFulkerson', ['server', 'client']);
 
 });
-
-Package.on_test(function (api) {
-  api.use(["ccorcos:ford-fulkerson", "tinytest", "test-helpers", "coffeescript"]);
-  api.add_files("lib/test.coffee", ["client", "server"]);
-});
